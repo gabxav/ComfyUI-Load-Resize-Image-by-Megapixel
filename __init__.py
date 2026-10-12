@@ -19,11 +19,19 @@ def target_size(width, height, megapixels, divisible_by, rounding):
     return new_w, new_h
 
 
-def resize_image(image, mask, enabled, megapixels, divisible_by, upscale_method, rounding, fit_mode):
+def resize_image(image, mask, enabled, megapixels, divisible_by, upscale_method, rounding, fit_mode,
+                 only_downscale=False):
     height, width = image.shape[1], image.shape[2]
-    if not enabled:
+    if not enabled or (only_downscale and width * height <= megapixels * 1_000_000):
         return image, width, height, mask
+    if only_downscale:
+        rounding = "floor (<= MP)"
     new_w, new_h = target_size(width, height, megapixels, int(divisible_by), rounding)
+    if only_downscale and (new_w * new_h > megapixels * 1_000_000 or new_w > width or new_h > height):
+        raise ValueError(
+            "Cannot downscale this image within the MP limit with the selected divisible_by. "
+            "Increase megapixels or choose a smaller divisible_by."
+        )
     crop = "center" if fit_mode.startswith("crop") else "disabled"
 
     if (new_w, new_h) != (width, height):
@@ -44,13 +52,20 @@ def resize_inputs():
         "resize": ("BOOLEAN", {"default": True, "label_on": "resize", "label_off": "original",
                                "tooltip": "Off: outputs the image at its original size."}),
         "megapixels": ("FLOAT", {"default": 1.0, "min": 0.01, "max": 64.0, "step": 0.05,
-                                 "tooltip": "Total pixel target (1.0 = ~1024x1024)."}),
+                                 "tooltip": "Total pixel target (1.0 = 1,000,000 pixels). With only_downscale, this is a maximum."}),
         "divisible_by": (DIVISIBLE_BY, {"default": "32", "tooltip": "Width and height become multiples of this."}),
         "upscale_method": (UPSCALE_METHODS, {"default": "lanczos"}),
         "rounding": (ROUNDING, {"default": "nearest",
                                 "tooltip": "nearest: closest to the MP target; floor: never above it; ceil: never below it."}),
         "fit_mode": (FIT_MODES, {"default": "crop (keep aspect)",
                                  "tooltip": "crop: center-crops the few pixels lost to rounding; stretch: slightly distorts instead."}),
+    }
+
+
+def resize_optional_inputs():
+    return {
+        "only_downscale": ("BOOLEAN", {"default": False, "label_on": "Só reduzir", "label_off": "Permitir ampliar",
+                                       "tooltip": "On: keep images at or below the MP limit unchanged. Larger images are reduced using floor rounding to stay within the limit. Ignored when resize is off."}),
     }
 
 
@@ -61,6 +76,7 @@ class LoadImageResizeMP(nodes.LoadImage):
     def INPUT_TYPES(cls):
         types = super().INPUT_TYPES()
         types["required"].update(resize_inputs())
+        types.setdefault("optional", {}).update(resize_optional_inputs())
         return types
 
     CATEGORY = "image"
@@ -69,9 +85,11 @@ class LoadImageResizeMP(nodes.LoadImage):
     RETURN_NAMES = ("IMAGE", "width", "height", "MASK")
     FUNCTION = "load_and_resize"
 
-    def load_and_resize(self, image, resize, megapixels, divisible_by, upscale_method, rounding, fit_mode):
+    def load_and_resize(self, image, resize, megapixels, divisible_by, upscale_method, rounding, fit_mode,
+                        only_downscale=False):
         img, mask = self.load_image(image)
-        return resize_image(img, mask, resize, megapixels, divisible_by, upscale_method, rounding, fit_mode)
+        return resize_image(img, mask, resize, megapixels, divisible_by, upscale_method, rounding, fit_mode,
+                            only_downscale)
 
     @classmethod
     def IS_CHANGED(cls, image, **kwargs):
@@ -87,17 +105,20 @@ class ImageResizeMP:
 
     @classmethod
     def INPUT_TYPES(cls):
-        return {"required": {"image": ("IMAGE",), **resize_inputs()}, "optional": {"mask": ("MASK",)}}
+        return {"required": {"image": ("IMAGE",), **resize_inputs()},
+                "optional": {"mask": ("MASK",), **resize_optional_inputs()}}
 
     CATEGORY = "image/transform"
     RETURN_TYPES = ("IMAGE", "INT", "INT", "MASK")
     RETURN_NAMES = ("IMAGE", "width", "height", "MASK")
     FUNCTION = "resize"
 
-    def resize(self, image, resize, megapixels, divisible_by, upscale_method, rounding, fit_mode, mask=None):
+    def resize(self, image, resize, megapixels, divisible_by, upscale_method, rounding, fit_mode, mask=None,
+               only_downscale=False):
         if mask is None:
             mask = torch.zeros((image.shape[0], 64, 64), dtype=image.dtype, device=image.device)
-        return resize_image(image, mask, resize, megapixels, divisible_by, upscale_method, rounding, fit_mode)
+        return resize_image(image, mask, resize, megapixels, divisible_by, upscale_method, rounding, fit_mode,
+                            only_downscale)
 
 
 NODE_CLASS_MAPPINGS = {
