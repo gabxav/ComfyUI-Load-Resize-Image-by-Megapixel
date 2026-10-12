@@ -64,7 +64,7 @@ def resize_inputs():
 
 def resize_optional_inputs():
     return {
-        "only_downscale": ("BOOLEAN", {"default": False, "label_on": "Só reduzir", "label_off": "Permitir ampliar",
+        "only_downscale": ("BOOLEAN", {"default": False, "label_on": "Only downscale", "label_off": "Allow upscale",
                                        "tooltip": "On: keep images at or below the MP limit unchanged. Larger images are reduced using floor rounding to stay within the limit. Ignored when resize is off."}),
     }
 
