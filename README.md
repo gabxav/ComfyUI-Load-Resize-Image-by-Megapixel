@@ -24,6 +24,11 @@ Exemplo: `1.0 MP` divisível por `32` → uma foto 1920×1080 vira 1344×736; um
 | `fit_mode` | `crop` mantém a proporção cortando do centro os pixels perdidos no arredondamento; `stretch` distorce levemente |
 | `only_downscale` | **on**: imagens com área menor ou igual ao MP selecionado passam intactas; imagens maiores são reduzidas sem ultrapassar o limite. **off** (padrão): permite ampliar ou reduzir ao alvo |
 
+Os controles de MP, múltiplos, interpolação, arredondamento, fit mode e `only_downscale` aparecem somente com
+`resize` ligado. Desligar `resize` oculta esses controles sem apagar seus valores; ligar novamente os restaura.
+O upload continua disponível. Se `resize` estiver conectado a outro node, os controles ficam disponíveis,
+pois o valor será definido por essa conexão na execução.
+
 ## Only downscale
 
 Ative `resize` e `only_downscale` para usar `megapixels` como um teto. O controle existe nos dois nodes.
