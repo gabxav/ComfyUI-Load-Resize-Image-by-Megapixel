@@ -130,3 +130,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadImageResizeMP": "Load & Resize Image by Megapixel",
     "ImageResizeMP": "Resize Image by Megapixel",
 }
+
+WEB_DIRECTORY = "./web"

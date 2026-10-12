@@ -42,6 +42,7 @@ Se o limite e o múltiplo escolhido não permitirem a redução, o node apresent
 
 Workflows antigos continuam com o comportamento anterior: o novo controle é opcional e assume `false` quando ausente.
 Os controles existentes conservam sua ordem. O arquivo enviado por upload não é alterado; o resize ocorre ao executar o workflow.
+A extensão de frontend migra o valor legado do botão de upload ao reabrir arquivos antigos, mantendo `only_downscale=false`.
 
 ## Saídas
 
