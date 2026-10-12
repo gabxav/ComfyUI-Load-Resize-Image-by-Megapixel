@@ -22,7 +22,7 @@ Exemplo: `1.0 MP` divisível por `32` → uma foto 1920×1080 vira 1344×736; um
 | `upscale_method` | lanczos, bicubic, bilinear, area, nearest-exact |
 | `rounding` | `nearest` fica o mais perto do alvo; `floor` nunca passa dele; `ceil` nunca fica abaixo |
 | `fit_mode` | `crop` mantém a proporção cortando do centro os pixels perdidos no arredondamento; `stretch` distorce levemente |
-| `only_downscale` | **Only downscale**: imagens com área menor ou igual ao MP selecionado passam intactas; imagens maiores são reduzidas sem ultrapassar o limite. Desligado por padrão (**Allow upscale**) |
+| `only_downscale` | **on**: imagens com área menor ou igual ao MP selecionado passam intactas; imagens maiores são reduzidas sem ultrapassar o limite. **off** (padrão): permite ampliar ou reduzir ao alvo |
 
 ## Only downscale
 
